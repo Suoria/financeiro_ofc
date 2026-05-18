@@ -743,6 +743,187 @@
     .main-grid { grid-template-columns: 1fr; }
   }
 
+  /* ========== MOBILE HAMBURGER BUTTON ========== */
+  .menu-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 500;
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 98;
+    backdrop-filter: blur(2px);
+  }
+
+  /* ========== FULL MOBILE BREAKPOINT ========== */
+  @media (max-width: 768px) {
+    /* Show hamburger */
+    .menu-toggle { display: flex; }
+
+    /* Sidebar becomes a drawer */
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 99;
+      width: 260px;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-overlay.open { display: block; }
+
+    /* Main takes full width */
+    .main { margin-left: 0; }
+
+    /* Header adjustments */
+    .header {
+      padding: 70px 18px 0;
+      flex-direction: column;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .page-title { font-size: 26px; }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .header-actions .btn {
+      flex: 1;
+      text-align: center;
+    }
+
+    /* Content padding */
+    .content { padding: 20px 14px 80px; }
+
+    /* Summary cards: 2 cols */
+    .summary-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .summary-card { padding: 16px; }
+    .card-value { font-size: 20px; margin-top: 10px; }
+
+    /* Days remaining card: stack vertically */
+    .days-remaining-card {
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      align-items: flex-start;
+    }
+
+    .days-big { font-size: 52px; min-width: unset; }
+
+    .burn-rate { min-width: unset; width: 100%; }
+
+    /* Main grid: single column */
+    .main-grid { grid-template-columns: 1fr; }
+
+    /* Goals grid */
+    #goals-grid { grid-template-columns: 1fr !important; }
+
+    /* Form rows */
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+
+    /* Filters on transactions page */
+    #filter-type, #filter-cat, #filter-search {
+      width: 100% !important;
+    }
+
+    /* Modal */
+    .modal { padding: 24px 18px; }
+
+    /* Bottom nav bar */
+    .bottom-nav {
+      display: flex;
+    }
+
+    /* Notification position */
+    .notif {
+      bottom: 80px;
+      right: 14px;
+      left: 14px;
+      width: auto;
+    }
+
+    /* tx-delete always visible on mobile */
+    .tx-delete { opacity: 1 !important; }
+
+    /* Section card header */
+    .section-header { padding: 16px 16px; }
+    .tx-item { padding: 12px 16px; }
+    .budget-item { padding: 14px 16px; }
+    .stat-row { padding: 12px 16px; }
+
+    /* Config page */
+    .content > div[style*="max-width:600px"] { max-width: 100% !important; }
+  }
+
+  /* ========== BOTTOM NAVIGATION (mobile only) ========== */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    z-index: 97;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    padding: 8px 4px;
+    cursor: pointer;
+    border-radius: 10px;
+    color: var(--text3);
+    font-size: 10px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .bottom-nav-item .bnav-icon { font-size: 20px; }
+  .bottom-nav-item.active { color: var(--gold2); }
+  .bottom-nav-item:hover { color: var(--text); }
+
   /* CHART BARS */
   .bar-chart {
     display: flex;
@@ -816,8 +997,18 @@
 </head>
 <body>
 
+<!-- HAMBURGER BUTTON (mobile only) -->
+<button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<!-- SIDEBAR OVERLAY (mobile only) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="logo">
     <div class="logo-mark">Finança</div>
     <div class="logo-sub">Controle Pessoal</div>
@@ -1331,6 +1522,30 @@
     </div>
   </div>
 </div>
+
+<!-- BOTTOM NAVIGATION (mobile only) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-item active" id="bnav-dashboard" onclick="showPage('dashboard');setActiveBottomNav('bnav-dashboard')">
+    <span class="bnav-icon">◈</span>
+    <span>Início</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-transactions" onclick="showPage('transactions');setActiveBottomNav('bnav-transactions')">
+    <span class="bnav-icon">⇄</span>
+    <span>Transações</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-budget" onclick="showPage('budget');setActiveBottomNav('bnav-budget')">
+    <span class="bnav-icon">◎</span>
+    <span>Orçamento</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-goals" onclick="showPage('goals');setActiveBottomNav('bnav-goals')">
+    <span class="bnav-icon">◉</span>
+    <span>Metas</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-relatorio" onclick="showPage('relatorio');setActiveBottomNav('bnav-relatorio')">
+    <span class="bnav-icon">▦</span>
+    <span>Relatórios</span>
+  </button>
+</nav>
 
 <!-- Notification -->
 <div class="notif" id="notif"></div>
@@ -1850,6 +2065,61 @@ function clearAllData() {
 loadState();
 loadConfig();
 updateAll();
+
+// ========== MOBILE MENU JS ==========
+(function() {
+  const toggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+
+  toggle.addEventListener('click', function() {
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+
+  overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar when a nav item is clicked (mobile)
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+})();
+
+// Sync bottom nav active state with sidebar nav
+function setActiveBottomNav(id) {
+  document.querySelectorAll('.bottom-nav-item').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+// Patch showPage to also update bottom nav
+(function() {
+  var _orig = showPage;
+  var pageToNav = {
+    dashboard: 'bnav-dashboard',
+    transactions: 'bnav-transactions',
+    budget: 'bnav-budget',
+    goals: 'bnav-goals',
+    relatorio: 'bnav-relatorio'
+  };
+  showPage = function(page) {
+    _orig(page);
+    if (pageToNav[page]) setActiveBottomNav(pageToNav[page]);
+  };
+})();
 </script>
 </body>
 </html>
