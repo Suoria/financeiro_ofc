@@ -553,6 +553,7 @@
   .budget-item {
     padding: 16px 24px;
     border-bottom: 1px solid var(--border);
+    position: relative;
   }
 
   .budget-item:last-child { border-bottom: none; }
@@ -589,6 +590,48 @@
     color: var(--text3);
     margin-top: 5px;
     text-align: right;
+  }
+
+  /* BUDGET ACTIONS — botões editar/excluir */
+  .budget-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    position: absolute;
+    top: 14px;
+    right: 24px;
+  }
+
+  .budget-item:hover .budget-actions { opacity: 1; }
+
+  .budget-action-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    border-radius: 7px;
+    width: 28px; height: 28px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .budget-action-btn.edit:hover {
+    color: var(--gold2);
+    border-color: rgba(201,168,76,0.4);
+    background: var(--gold-dim);
+  }
+
+  .budget-action-btn.del:hover {
+    color: var(--red);
+    border-color: rgba(241,107,107,0.4);
+    background: var(--red-dim);
+  }
+
+  @media (max-width: 768px) {
+    .budget-actions { opacity: 1; }
   }
 
   /* METAS */
@@ -1757,6 +1800,7 @@
         <div class="section-card">
           <div class="section-header">
             <div class="section-title">Categorias de Despesa</div>
+            <span class="section-badge badge-gold" style="font-size:10px;">Passe o mouse para editar</span>
           </div>
           <div id="budget-full-list"></div>
         </div>
@@ -2042,7 +2086,7 @@
   </div>
 </div>
 
-<!-- Modal: Orçamento -->
+<!-- Modal: Novo Orçamento -->
 <div class="modal-overlay" id="modal-budget">
   <div class="modal">
     <div class="modal-title">Definir Orçamento</div>
@@ -2068,6 +2112,32 @@
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-budget')">Cancelar</button>
       <button class="btn btn-primary" onclick="addBudget()">✓ Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ★ Modal: Editar Orçamento (NOVO) -->
+<div class="modal-overlay" id="modal-budget-edit">
+  <div class="modal">
+    <div class="modal-title">Editar Orçamento</div>
+    <input type="hidden" id="edit-bud-cat-key">
+    <div class="form-full">
+      <label class="field-label">Categoria</label>
+      <div class="field-input" style="background:var(--bg3);color:var(--text3);display:flex;align-items:center;gap:8px;cursor:default;" id="edit-bud-cat-display">
+        <!-- preenchido pelo JS -->
+      </div>
+    </div>
+    <div class="form-full">
+      <label class="field-label">Novo limite mensal (R$)</label>
+      <input class="field-input" id="edit-bud-limit" type="number" placeholder="Ex: 1500" min="0">
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:4px;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;">
+      <span>ℹ️</span>
+      <span id="edit-bud-hint">Gasto atual nesta categoria este mês: —</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-budget-edit')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBudgetEdit()">✓ Salvar alteração</button>
     </div>
   </div>
 </div>
@@ -2310,7 +2380,6 @@ function ensureDefaultWallets() {
   }
 }
 
-// Load from cloud (called after login) - localStorage as offline fallback
 function loadState() {
   try {
     const saved = localStorage.getItem('financa_state_local');
@@ -2319,9 +2388,7 @@ function loadState() {
 }
 
 function saveState() {
-  // Always save locally as fallback
   try { localStorage.setItem('financa_state_local', JSON.stringify(state)); } catch(e) {}
-  // Debounce cloud save (300ms)
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(saveStateCloud, 300);
 }
@@ -2585,7 +2652,7 @@ function addExpense() {
   notify('Despesa adicionada!');
 }
 
-// ================== DELETE ==================
+// ================== DELETE TRANSACTION ==================
 function deleteTransaction(id) {
   state.transactions = state.transactions.filter(t => t.id !== id);
   saveState(); updateAll();
@@ -2601,6 +2668,42 @@ function addBudget() {
   saveState(); updateAll(); closeModal('modal-budget');
   document.getElementById('bud-limit').value = '';
   notify('Orçamento definido!');
+}
+
+// ★ Abre modal de edição de orçamento
+function editBudget(cat) {
+  const limit = state.budgets[cat] || 0;
+
+  // Calcula gasto atual nesta categoria no mês
+  const monthExpenses = getMonthTransactions().filter(t => t.type === 'expense' && t.status !== 'pending');
+  const spent = monthExpenses.filter(t => t.cat === cat).reduce((s, t) => s + t.value, 0);
+
+  document.getElementById('edit-bud-cat-key').value = cat;
+  document.getElementById('edit-bud-cat-display').innerHTML = `<span style="font-size:16px;">${catEmoji(cat)}</span> <span style="color:var(--text);font-weight:500;">${cat}</span>`;
+  document.getElementById('edit-bud-limit').value = limit;
+  document.getElementById('edit-bud-hint').textContent = `Gasto atual nesta categoria este mês: ${fmt(spent)}`;
+
+  openModal('modal-budget-edit');
+  // Focar no input após abrir
+  setTimeout(() => document.getElementById('edit-bud-limit').focus(), 50);
+}
+
+// ★ Salva edição do orçamento
+function saveBudgetEdit() {
+  const cat = document.getElementById('edit-bud-cat-key').value;
+  const limit = parseFloat(document.getElementById('edit-bud-limit').value);
+  if (!limit || limit <= 0) { notify('Informe um valor válido.', 'error'); return; }
+  state.budgets[cat] = limit;
+  saveState(); updateAll(); closeModal('modal-budget-edit');
+  notify(`Orçamento de "${cat}" atualizado!`);
+}
+
+// ★ Exclui orçamento de uma categoria
+function deleteBudget(cat) {
+  if (!confirm(`Excluir o orçamento de "${cat}"?`)) return;
+  delete state.budgets[cat];
+  saveState(); updateAll();
+  notify(`Orçamento de "${cat}" removido.`, 'info');
 }
 
 // ================== GOALS ==================
@@ -2780,16 +2883,27 @@ function catExpenses(expenses) {
   return map;
 }
 
-function budgetBar(cat, spent, limit) {
+// ★ budgetBar agora aceita parâmetro showActions para renderizar os botões
+function budgetBar(cat, spent, limit, showActions = false) {
   const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
   const cls = pct >= 100 ? 'danger' : pct >= 80 ? 'warn' : 'ok';
+  const hasLimit = limit > 0;
+
+  // Botões de editar/excluir — só aparecem se showActions=true e houver limite definido
+  const actionBtns = showActions && hasLimit ? `
+    <div class="budget-actions">
+      <button class="budget-action-btn edit" title="Editar orçamento" onclick="editBudget('${cat.replace(/'/g, "\\'")}')">✏️</button>
+      <button class="budget-action-btn del" title="Excluir orçamento" onclick="deleteBudget('${cat.replace(/'/g, "\\'")}')">🗑️</button>
+    </div>` : '';
+
   return `<div class="budget-item">
+    ${actionBtns}
     <div class="budget-header">
       <div class="budget-cat">${catEmoji(cat)} ${cat}</div>
-      <div class="budget-vals">${fmt(spent)} / ${limit > 0 ? fmt(limit) : 'Sem limite'}</div>
+      <div class="budget-vals">${fmt(spent)} / ${hasLimit ? fmt(limit) : 'Sem limite'}</div>
     </div>
     <div class="budget-bar-bg"><div class="budget-bar-fill ${cls}" style="width:${pct}%"></div></div>
-    <div class="budget-pct">${pct.toFixed(0)}% utilizado${limit > 0 ? ' · ' + fmt(Math.max(limit - spent, 0)) + ' disponível' : ''}</div>
+    <div class="budget-pct">${pct.toFixed(0)}% utilizado${hasLimit ? ' · ' + fmt(Math.max(limit - spent, 0)) + ' disponível' : ''}</div>
   </div>`;
 }
 
@@ -2801,7 +2915,8 @@ function updateBudgetMini(expenses) {
     el.innerHTML = `<div style="padding:20px 24px;font-size:13px;color:var(--text3);">Nenhum orçamento definido. <span style="color:var(--gold2);cursor:pointer;" onclick="showPage('budget')">Definir →</span></div>`;
     return;
   }
-  el.innerHTML = cats.map(c => budgetBar(c, spent[c] || 0, state.budgets[c])).join('');
+  // No mini (dashboard) não mostramos os botões de ação
+  el.innerHTML = cats.map(c => budgetBar(c, spent[c] || 0, state.budgets[c], false)).join('');
 }
 
 function updateBudgetFull(expenses) {
@@ -2812,7 +2927,8 @@ function updateBudgetFull(expenses) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">◎</div><div class="empty-text">Nenhuma despesa ou orçamento ainda.</div></div>`;
     return;
   }
-  el.innerHTML = allCats.map(c => budgetBar(c, spent[c] || 0, state.budgets[c] || 0)).join('');
+  // Na página de orçamento mostramos os botões de ação (showActions=true)
+  el.innerHTML = allCats.map(c => budgetBar(c, spent[c] || 0, state.budgets[c] || 0, true)).join('');
 
   // Recommendation
   const totalIncome = getMonthTransactions().filter(t => t.type === 'income').reduce((s,t) => s+t.value, 0);
@@ -2991,7 +3107,6 @@ function clearAllData() {
 
 // ================== INIT ==================
 // Initialization is handled by the Supabase auth state listener above.
-// If no session is found, the auth screen is shown automatically.
 
 // ========== MOBILE MENU JS ==========
 (function() {
@@ -3015,7 +3130,6 @@ function clearAllData() {
 
   overlay.addEventListener('click', closeSidebar);
 
-  // Close sidebar when a nav item is clicked (mobile)
   document.querySelectorAll('.nav-item').forEach(function(item) {
     item.addEventListener('click', function() {
       if (window.innerWidth <= 768) closeSidebar();
@@ -3023,7 +3137,6 @@ function clearAllData() {
   });
 })();
 
-// Sync bottom nav active state with sidebar nav
 function setActiveBottomNav(id) {
   document.querySelectorAll('.bottom-nav-item').forEach(function(el) {
     el.classList.remove('active');
@@ -3032,7 +3145,6 @@ function setActiveBottomNav(id) {
   if (el) el.classList.add('active');
 }
 
-// Patch showPage to also update bottom nav
 (function() {
   var _orig = showPage;
   var pageToNav = {
@@ -3047,6 +3159,7 @@ function setActiveBottomNav(id) {
     if (pageToNav[page]) setActiveBottomNav(pageToNav[page]);
   };
 })();
+
 // ===== PWA: Service Worker =====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -3085,7 +3198,6 @@ function installPWA() {
       _pwaPrompt = null;
     });
   } else {
-    // Fallback: instruções manuais
     alert('Para instalar o app:\n\n📱 iPhone/iPad (Safari):\nToque em Compartilhar → "Adicionar à Tela Inicial"\n\n🤖 Android (Chrome):\nMenu ⋮ → "Adicionar à tela inicial"\n\n💻 Chrome/Edge no PC:\nClique no ícone ⊕ na barra de endereços');
   }
 }
