@@ -1364,29 +1364,37 @@
   }
 
   .mobile-topbar-icon-btn:hover { background: var(--card); color: var(--text); }
-  .mobile-topbar-icon-btn.gold { background: var(--gold-dim); color: var(--gold2); border-color: rgba(201,168,76,0.25); }
+  .mobile-topbar-icon-btn.gold { background: var(--gold-dim); color: var(--gold2); border-color: rgba(201,168,76,0.25); width: auto; padding: 0 14px; font-size: 13px; font-weight: 600; gap: 6px; }
 
   @media (max-width: 768px) {
     .mobile-topbar { display: flex; }
     /* Hide old hamburger toggle (replaced by topbar) */
     .menu-toggle { display: none !important; }
-    /* Hide desktop user-menu inside header */
+    /* Hide desktop user-menu and install btn inside header on mobile */
     .header .user-menu { display: none; }
-    /* Adjust header top padding to sit below topbar */
-    .header { padding-top: 70px !important; }
-    /* Header actions: only show action buttons, stack nicely */
+    #pwa-install-btn { display: none !important; }
+    /* Adjust header: title below topbar, compact */
+    .header {
+      padding-top: 68px !important;
+      padding-bottom: 0 !important;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .page-title { font-size: 28px !important; }
+    .page-subtitle { font-size: 12px !important; margin-top: 2px !important; }
+    /* Header actions: two full-width buttons side by side */
     .header-actions {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 8px;
+      width: 100%;
     }
     .header-actions .btn {
       flex: 1;
-      min-width: 100px;
       text-align: center;
+      padding: 11px 10px;
     }
-    /* Hide install button text on mobile, show icon */
-    #pwa-install-btn .pwa-label { display: none; }
   }
 
 </style>
@@ -1534,9 +1542,7 @@
   <button class="mobile-topbar-icon-btn" onclick="document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open');" title="Menu" style="font-size:18px;">☰</button>
   <span class="mobile-topbar-logo">Finança</span>
   <div class="mobile-topbar-right">
-    <button id="pwa-topbar-btn" class="mobile-topbar-icon-btn gold" onclick="installPWA()" style="display:none;" title="Instalar App">⬇</button>
-    <button class="mobile-topbar-icon-btn" onclick="openModal('modal-income')" title="+ Receita" style="color:var(--green);">＋</button>
-    <button class="mobile-topbar-icon-btn" onclick="openModal('modal-expense')" title="+ Despesa" style="background:var(--gold-dim);color:var(--gold2);border-color:rgba(201,168,76,0.25);">₢</button>
+    <button id="pwa-topbar-btn" class="mobile-topbar-icon-btn gold" onclick="installPWA()" style="display:none;" title="Instalar App">⬇ Instalar</button>
   </div>
 </div>
 
