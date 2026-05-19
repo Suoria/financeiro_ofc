@@ -1189,6 +1189,7 @@
   @media (max-width: 768px) {
     .auth-card { padding: 28px 20px; }
     .user-email { display: none; }
+    #mobile-logout-btn { display: flex !important; }
   }
 </style>
 <body>
@@ -1249,6 +1250,30 @@
   <span></span>
   <span></span>
   <span></span>
+</button>
+
+<!-- LOGOUT BUTTON (mobile only, top-right) -->
+<button id="mobile-logout-btn" onclick="doLogout()" aria-label="Sair" style="
+  display: none;
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 500;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+" onmouseover="this.style.color='var(--red)';this.style.borderColor='rgba(241,107,107,0.4)'"
+   onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border2)'">
+  ↩
 </button>
 
 <!-- SIDEBAR OVERLAY (mobile only) -->
@@ -1317,6 +1342,11 @@
         <div class="page-subtitle" id="header-date">Carregando...</div>
       </div>
       <div class="header-actions">
+        <div class="user-menu" style="margin-right:6px;">
+          <span class="sync-dot"></span>
+          <span class="user-email" id="header-user-email"></span>
+          <button class="btn-logout" onclick="doLogout()">↩ Sair</button>
+        </div>
         <button class="btn btn-outline" onclick="openModal('modal-income')">+ Receita</button>
         <button class="btn btn-primary" onclick="openModal('modal-expense')">+ Despesa</button>
       </div>
@@ -1903,8 +1933,10 @@ function translateAuthError(msg) {
 function showApp(user) {
   currentUser = user;
   document.getElementById('auth-screen').style.display = 'none';
-  const emailEl = document.getElementById('sidebar-user-email');
-  if (emailEl) emailEl.textContent = user.email;
+  const sidebarEmail = document.getElementById('sidebar-user-email');
+  if (sidebarEmail) sidebarEmail.textContent = user.email;
+  const headerEmail = document.getElementById('header-user-email');
+  if (headerEmail) headerEmail.textContent = user.email;
 }
 
 function hideApp() {
