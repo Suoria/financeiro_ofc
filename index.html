@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finança — Gestão Financeira Pessoal</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0d0f14;
@@ -993,9 +994,255 @@
   .highlight-text { flex: 1; }
   .highlight-title { font-size: 15px; font-weight: 600; color: var(--text); }
   .highlight-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  /* ========== AUTH SCREEN ========== */
+  #auth-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .auth-card {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+  }
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .auth-logo-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--gold2);
+    letter-spacing: -0.5px;
+  }
+
+  .auth-logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text3);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .auth-tab.active {
+    background: var(--gold-dim);
+    color: var(--gold2);
+    border: 1px solid rgba(201,168,76,0.25);
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+  .auth-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .auth-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .auth-input:focus { border-color: var(--gold); }
+  .auth-input::placeholder { color: var(--text3); }
+
+  .auth-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--gold);
+    color: #0d0f14;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    margin-top: 6px;
+  }
+
+  .auth-btn:hover { background: var(--gold2); transform: translateY(-1px); }
+  .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .auth-error {
+    background: var(--red-dim);
+    border: 1px solid rgba(241,107,107,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--red);
+    display: none;
+  }
+
+  .auth-success {
+    background: var(--green-dim);
+    border: 1px solid rgba(62,207,142,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--green);
+    display: none;
+  }
+
+  .auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  /* User menu (top-right, desktop) */
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-email {
+    font-size: 12px;
+    color: var(--text3);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-logout {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { color: var(--red); border-color: rgba(241,107,107,0.4); }
+
+  /* Sync indicator */
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 4px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (max-width: 768px) {
+    .auth-card { padding: 28px 20px; }
+    .user-email { display: none; }
+  }
 </style>
-</head>
 <body>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">Finança</div>
+      <div class="auth-logo-sub">Controle Pessoal</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Criar conta</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login" class="auth-form">
+      <div class="auth-field">
+        <label class="auth-label">E-mail</label>
+        <input class="auth-input" id="login-email" type="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Senha</label>
+        <input class="auth-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="auth-btn" id="btn-login" onclick="doLogin()">Entrar</button>
+      <div class="auth-footer">
+        <span style="cursor:pointer;color:var(--gold2);" onclick="doForgotPassword()">Esqueci minha senha</span>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" class="auth-form" style="display:none;">
+      <div class="auth-field">
+        <label class="auth-label">E-mail</label>
+        <input class="auth-input" id="reg-email" type="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Senha</label>
+        <input class="auth-input" id="reg-password" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Confirmar senha</label>
+        <input class="auth-input" id="reg-password2" type="password" placeholder="Repita a senha" autocomplete="new-password">
+      </div>
+      <button class="auth-btn" id="btn-register" onclick="doRegister()">Criar conta</button>
+    </div>
+  </div>
+</div>
 
 <!-- HAMBURGER BUTTON (mobile only) -->
 <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
@@ -1047,6 +1294,15 @@
       <span id="days-passed">0 dias</span>
       <span id="days-left-side">0 restam</span>
     </div>
+  </div>
+
+  <!-- User info + logout in sidebar -->
+  <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:auto;">
+    <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">
+      <span class="sync-dot"></span>Conectado
+    </div>
+    <div id="sidebar-user-email" style="font-size:12px;color:var(--text2);margin-bottom:10px;word-break:break-all;"></div>
+    <button class="btn-logout" style="width:100%;" onclick="doLogout()">↩ Sair</button>
   </div>
 </aside>
 
@@ -1551,6 +1807,159 @@
 <div class="notif" id="notif"></div>
 
 <script>
+// ================== SUPABASE ==================
+const SUPABASE_URL = 'https://mdvuizhxxwfluahwvblj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kdnVpemh4eHdmbHVhaHd2YmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4Njc1NDUsImV4cCI6MjA4NTQ0MzU0NX0.953ZvH6O7FMV3qCdo2YW4NV2I5NK7yiIRTHycv0583s';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let saveTimeout = null;
+
+// ---- Auth UI helpers ----
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-login').style.display = tab === 'login' ? 'flex' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'flex' : 'none';
+  clearAuthMessages();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function clearAuthMessages() {
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function setAuthLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Aguarde...' : (btnId === 'btn-login' ? 'Entrar' : 'Criar conta');
+}
+
+// ---- Auth actions ----
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  if (!email || !pass) return showAuthError('Preencha e-mail e senha.');
+  clearAuthMessages();
+  setAuthLoading('btn-login', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  setAuthLoading('btn-login', false);
+  if (error) return showAuthError(translateAuthError(error.message));
+}
+
+async function doRegister() {
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-password').value;
+  const pass2 = document.getElementById('reg-password2').value;
+  if (!email || !pass) return showAuthError('Preencha todos os campos.');
+  if (pass !== pass2) return showAuthError('As senhas não coincidem.');
+  if (pass.length < 6) return showAuthError('A senha deve ter pelo menos 6 caracteres.');
+  clearAuthMessages();
+  setAuthLoading('btn-register', true);
+  const { error } = await sb.auth.signUp({ email, password: pass });
+  setAuthLoading('btn-register', false);
+  if (error) return showAuthError(translateAuthError(error.message));
+  showAuthSuccess('Conta criada! Verifique seu e-mail para confirmar (ou entre diretamente se a confirmação estiver desativada).');
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) return showAuthError('Digite seu e-mail no campo acima primeiro.');
+  clearAuthMessages();
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if (error) return showAuthError(translateAuthError(error.message));
+  showAuthSuccess('E-mail de redefinição enviado! Verifique sua caixa de entrada.');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+function translateAuthError(msg) {
+  if (msg.includes('Invalid login')) return 'E-mail ou senha incorretos.';
+  if (msg.includes('Email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
+  if (msg.includes('User already registered')) return 'Este e-mail já está cadastrado.';
+  if (msg.includes('Password should be')) return 'A senha deve ter pelo menos 6 caracteres.';
+  if (msg.includes('Unable to validate')) return 'E-mail inválido.';
+  return msg;
+}
+
+// ---- App show/hide ----
+function showApp(user) {
+  currentUser = user;
+  document.getElementById('auth-screen').style.display = 'none';
+  const emailEl = document.getElementById('sidebar-user-email');
+  if (emailEl) emailEl.textContent = user.email;
+}
+
+function hideApp() {
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  // Reset state
+  state = { transactions: [], budgets: {}, goals: [], config: { salary: 0, closing: 5 } };
+  updateAll();
+}
+
+// ---- Cloud save/load ----
+async function saveStateCloud() {
+  if (!currentUser) return;
+  await sb.from('user_data').upsert({
+    user_id: currentUser.id,
+    data: state,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+}
+
+async function loadStateCloud() {
+  if (!currentUser) return;
+  const { data, error } = await sb.from('user_data').select('data').eq('user_id', currentUser.id).single();
+  if (data && data.data) {
+    state = data.data;
+  }
+}
+
+// ---- Auth state listener ----
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session && session.user) {
+    await loadStateCloud();
+    showApp(session.user);
+    loadConfig();
+    updateAll();
+  } else {
+    hideApp();
+  }
+});
+
+// Enter key support on auth forms
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('login-password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('login-email').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('reg-password2').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doRegister();
+  });
+});
+
+</script>
+<script>
 // ================== STATE ==================
 let state = {
   transactions: [],
@@ -1559,16 +1968,20 @@ let state = {
   config: { salary: 0, closing: 5 }
 };
 
-// Load from localStorage
+// Load from cloud (called after login) - localStorage as offline fallback
 function loadState() {
   try {
-    const saved = localStorage.getItem('financa_state');
+    const saved = localStorage.getItem('financa_state_local');
     if (saved) state = JSON.parse(saved);
   } catch(e) {}
 }
 
 function saveState() {
-  localStorage.setItem('financa_state', JSON.stringify(state));
+  // Always save locally as fallback
+  try { localStorage.setItem('financa_state_local', JSON.stringify(state)); } catch(e) {}
+  // Debounce cloud save (300ms)
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveStateCloud, 300);
 }
 
 // ================== UTILS ==================
@@ -2062,9 +2475,8 @@ function clearAllData() {
 }
 
 // ================== INIT ==================
-loadState();
-loadConfig();
-updateAll();
+// Initialization is handled by the Supabase auth state listener above.
+// If no session is found, the auth screen is shown automatically.
 
 // ========== MOBILE MENU JS ==========
 (function() {
