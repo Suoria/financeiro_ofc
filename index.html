@@ -1191,6 +1191,95 @@
     .user-email { display: none; }
     #mobile-logout-btn { display: flex !important; }
   }
+
+  /* ========== WALLET CARDS ========== */
+  .wallet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .wallet-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .wallet-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+
+  .wallet-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .wallet-emoji { font-size: 24px; margin-bottom: 10px; display: block; }
+
+  .wallet-name {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .wallet-balance {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .wallet-balance.negative { color: var(--red); }
+  .wallet-meta { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  .wallet-actions {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: flex; gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .wallet-card:hover .wallet-actions { opacity: 1; }
+
+  .wallet-action-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .wallet-action-btn:hover { color: var(--red); border-color: rgba(241,107,107,0.4); }
+
+  .wallet-restriction {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 8px;
+    background: var(--bg3);
+    border-radius: 6px;
+    padding: 3px 7px;
+    display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    .wallet-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .wallet-card { padding: 14px; }
+    .wallet-balance { font-size: 18px; }
+    .wallet-actions { opacity: 1; }
+  }
 </style>
 <body>
 
@@ -1353,35 +1442,38 @@
     </div>
 
     <div class="content">
-      <!-- SUMMARY CARDS -->
-      <div class="summary-grid">
-        <div class="summary-card income">
-          <div class="card-label">
-            <div class="card-icon g">↑</div> Receitas
-          </div>
-          <div class="card-value income" id="total-income">R$ 0,00</div>
-          <div class="card-meta" id="income-count">0 entradas este mês</div>
+      <!-- CARTEIRAS -->
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Carteiras</div>
+          <button class="btn btn-outline" style="padding:6px 14px;font-size:12px;" onclick="openModal('modal-wallet')">+ Nova carteira</button>
         </div>
+        <div class="wallet-grid" id="wallet-cards">
+          <!-- preenchido pelo JS -->
+        </div>
+      </div>
+
+      <!-- RESUMO RÁPIDO (antes eram os 4 cards) -->
+      <div class="summary-grid" style="margin-bottom:20px;">
         <div class="summary-card expense">
-          <div class="card-label">
-            <div class="card-icon r">↓</div> Despesas
-          </div>
+          <div class="card-label"><div class="card-icon r">↓</div> Despesas do mês</div>
           <div class="card-value expense" id="total-expense">R$ 0,00</div>
           <div class="card-meta" id="expense-count">0 saídas este mês</div>
         </div>
         <div class="summary-card balance">
-          <div class="card-label">
-            <div class="card-icon gold">◈</div> Saldo
-          </div>
+          <div class="card-label"><div class="card-icon gold">◈</div> Saldo total</div>
           <div class="card-value balance" id="total-balance">R$ 0,00</div>
-          <div class="card-meta" id="balance-status">Disponível</div>
+          <div class="card-meta" id="balance-status">Soma de todas as carteiras</div>
         </div>
         <div class="summary-card pending">
-          <div class="card-label">
-            <div class="card-icon b">⏱</div> A pagar
-          </div>
+          <div class="card-label"><div class="card-icon b">⏱</div> A pagar</div>
           <div class="card-value pending" id="total-pending">R$ 0,00</div>
           <div class="card-meta" id="pending-count">0 contas pendentes</div>
+        </div>
+        <div class="summary-card income">
+          <div class="card-label"><div class="card-icon g">↑</div> Receitas do mês</div>
+          <div class="card-value income" id="total-income">R$ 0,00</div>
+          <div class="card-meta" id="income-count">0 entradas este mês</div>
         </div>
       </div>
 
@@ -1650,6 +1742,47 @@
 
 <!-- ============ MODALS ============ -->
 
+<!-- Modal: Nova Carteira -->
+<div class="modal-overlay" id="modal-wallet">
+  <div class="modal">
+    <div class="modal-title">Nova Carteira</div>
+    <div class="form-full">
+      <label class="field-label">Nome da carteira</label>
+      <input class="field-input" id="wallet-name" type="text" placeholder="Ex: Vale Alimentação, Conta Corrente...">
+    </div>
+    <div class="form-row">
+      <div>
+        <label class="field-label">Emoji / Ícone</label>
+        <input class="field-input" id="wallet-emoji" type="text" placeholder="🍽️" maxlength="2">
+      </div>
+      <div>
+        <label class="field-label">Cor</label>
+        <select class="field-select" id="wallet-color">
+          <option value="#c9a84c">🟡 Dourado</option>
+          <option value="#3ecf8e">🟢 Verde</option>
+          <option value="#5b8dee">🔵 Azul</option>
+          <option value="#f16b6b">🔴 Vermelho</option>
+          <option value="#a78bfa">🟣 Roxo</option>
+          <option value="#f59e0b">🟠 Laranja</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-full">
+      <label class="field-label">Saldo inicial (R$)</label>
+      <input class="field-input" id="wallet-initial" type="number" placeholder="0,00" min="0">
+    </div>
+    <div class="form-full">
+      <label class="field-label">Restrição de uso (opcional)</label>
+      <input class="field-input" id="wallet-restriction" type="text" placeholder="Ex: Somente supermercado e padaria">
+      <div style="font-size:11px;color:var(--text3);margin-top:5px;">Deixe em branco para carteira de uso livre.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-wallet')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addWallet()">✓ Criar Carteira</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Receita -->
 <div class="modal-overlay" id="modal-income">
   <div class="modal">
@@ -1678,6 +1811,10 @@
         <option value="Presente">🎁 Presente</option>
         <option value="Outros">📦 Outros</option>
       </select>
+    </div>
+    <div class="form-full">
+      <label class="field-label">Carteira de destino</label>
+      <select class="field-select" id="inc-wallet"></select>
     </div>
     <div class="form-full">
       <label class="field-label">Observação (opcional)</label>
@@ -1732,6 +1869,11 @@
           <option value="recurring">🔄 Recorrente</option>
         </select>
       </div>
+    </div>
+    <div class="form-full">
+      <label class="field-label">Carteira de origem</label>
+      <select class="field-select" id="exp-wallet"></select>
+      <div id="exp-wallet-balance-hint" style="font-size:11px;color:var(--text3);margin-top:5px;"></div>
     </div>
     <div class="form-full">
       <label class="field-label">Observação (opcional)</label>
@@ -1969,6 +2111,7 @@ async function loadStateCloud() {
 sb.auth.onAuthStateChange(async (event, session) => {
   if (session && session.user) {
     await loadStateCloud();
+    ensureDefaultWallets();
     showApp(session.user);
     loadConfig();
     updateAll();
@@ -1997,8 +2140,19 @@ let state = {
   transactions: [],
   budgets: {},
   goals: [],
+  wallets: [],
   config: { salary: 0, closing: 5 }
 };
+
+// Default wallets created on first login
+function ensureDefaultWallets() {
+  if (!state.wallets || state.wallets.length === 0) {
+    state.wallets = [
+      { id: 1, name: 'Dinheiro Livre', emoji: '💳', color: '#c9a84c', initial: 0, restriction: '' },
+      { id: 2, name: 'Vale Alimentação', emoji: '🍽️', color: '#3ecf8e', initial: 0, restriction: 'Supermercado, padaria, mercearia' },
+    ];
+  }
+}
 
 // Load from cloud (called after login) - localStorage as offline fallback
 function loadState() {
@@ -2043,6 +2197,103 @@ function catEmoji(cat) {
   return map[cat] || '📦';
 }
 
+// ================== WALLETS ==================
+function getWalletBalance(walletId) {
+  const w = state.wallets.find(w => w.id === walletId);
+  if (!w) return 0;
+  const income = state.transactions
+    .filter(t => t.type === 'income' && t.walletId === walletId)
+    .reduce((s, t) => s + t.value, 0);
+  const expense = state.transactions
+    .filter(t => t.type === 'expense' && t.walletId === walletId && t.status !== 'pending')
+    .reduce((s, t) => s + t.value, 0);
+  return (w.initial || 0) + income - expense;
+}
+
+function addWallet() {
+  const name = document.getElementById('wallet-name').value.trim();
+  const emoji = document.getElementById('wallet-emoji').value.trim() || '💳';
+  const color = document.getElementById('wallet-color').value;
+  const initial = parseFloat(document.getElementById('wallet-initial').value) || 0;
+  const restriction = document.getElementById('wallet-restriction').value.trim();
+  if (!name) { notify('Informe o nome da carteira.', 'error'); return; }
+  const id = Date.now();
+  state.wallets.push({ id, name, emoji, color, initial, restriction });
+  saveState(); updateAll(); closeModal('modal-wallet');
+  document.getElementById('wallet-name').value = '';
+  document.getElementById('wallet-emoji').value = '';
+  document.getElementById('wallet-initial').value = '';
+  document.getElementById('wallet-restriction').value = '';
+  notify('Carteira criada!');
+}
+
+function deleteWallet(id) {
+  const hasTx = state.transactions.some(t => t.walletId === id);
+  if (hasTx) {
+    if (!confirm('Esta carteira tem transações vinculadas. Deseja mesmo excluir? As transações perderão o vínculo com ela.')) return;
+  } else {
+    if (!confirm('Excluir esta carteira?')) return;
+  }
+  state.wallets = state.wallets.filter(w => w.id !== id);
+  saveState(); updateAll();
+  notify('Carteira removida.', 'info');
+}
+
+function populateWalletSelects() {
+  const wallets = state.wallets || [];
+  const noWallet = '<option value="">— Sem carteira —</option>';
+  const opts = wallets.map(w => `<option value="${w.id}">${w.emoji} ${w.name}</option>`).join('');
+
+  const incSel = document.getElementById('inc-wallet');
+  const expSel = document.getElementById('exp-wallet');
+  if (incSel) incSel.innerHTML = noWallet + opts;
+  if (expSel) {
+    expSel.innerHTML = noWallet + opts;
+    expSel.onchange = updateExpWalletHint;
+    updateExpWalletHint();
+  }
+}
+
+function updateExpWalletHint() {
+  const sel = document.getElementById('exp-wallet');
+  const hint = document.getElementById('exp-wallet-balance-hint');
+  if (!sel || !hint) return;
+  const wId = parseInt(sel.value);
+  if (!wId) { hint.textContent = ''; return; }
+  const w = state.wallets.find(w => w.id === wId);
+  const bal = getWalletBalance(wId);
+  const restr = w && w.restriction ? ` · Uso: ${w.restriction}` : '';
+  hint.innerHTML = `Saldo disponível: <strong style="color:${bal >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(bal)}</strong>${restr}`;
+}
+
+function updateWalletCards() {
+  const container = document.getElementById('wallet-cards');
+  if (!container) return;
+  const wallets = state.wallets || [];
+
+  if (!wallets.length) {
+    container.innerHTML = `<div style="grid-column:1/-1;padding:20px;color:var(--text3);font-size:13px;">Nenhuma carteira criada. Clique em "+ Nova carteira" para começar.</div>`;
+    return;
+  }
+
+  container.innerHTML = wallets.map(w => {
+    const bal = getWalletBalance(w.id);
+    const negative = bal < 0;
+    const txCount = state.transactions.filter(t => t.walletId === w.id).length;
+    return `<div class="wallet-card">
+      <div class="wallet-actions">
+        <button class="wallet-action-btn" title="Excluir" onclick="deleteWallet(${w.id})">✕</button>
+      </div>
+      <style>.wallet-card:nth-child(${wallets.indexOf(w)+1})::after { background: ${w.color}; }</style>
+      <span class="wallet-emoji">${w.emoji}</span>
+      <div class="wallet-name">${w.name}</div>
+      <div class="wallet-balance ${negative ? 'negative' : ''}">${negative ? '- ' : ''}${fmt(bal)}</div>
+      <div class="wallet-meta">${txCount} transaç${txCount !== 1 ? 'ões' : 'ão'}</div>
+      ${w.restriction ? `<div class="wallet-restriction">📌 ${w.restriction}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 // ================== MODALS ==================
 function openModal(id) {
   document.getElementById(id).classList.add('open');
@@ -2076,10 +2327,11 @@ function addIncome() {
   const date = document.getElementById('inc-date').value;
   const cat = document.getElementById('inc-cat').value;
   const note = document.getElementById('inc-note').value.trim();
+  const walletId = parseInt(document.getElementById('inc-wallet').value) || null;
 
   if (!desc || !val || val <= 0 || !date) { notify('Preencha todos os campos obrigatórios.', 'error'); return; }
 
-  state.transactions.unshift({ id: Date.now(), type: 'income', desc, value: val, date, cat, note, status: 'paid' });
+  state.transactions.unshift({ id: Date.now(), type: 'income', desc, value: val, date, cat, note, status: 'paid', walletId });
   saveState(); updateAll(); closeModal('modal-income');
   document.getElementById('inc-desc').value = '';
   document.getElementById('inc-value').value = '';
@@ -2095,10 +2347,21 @@ function addExpense() {
   const cat = document.getElementById('exp-cat').value;
   const status = document.getElementById('exp-status').value;
   const note = document.getElementById('exp-note').value.trim();
+  const walletId = parseInt(document.getElementById('exp-wallet').value) || null;
 
   if (!desc || !val || val <= 0 || !date) { notify('Preencha todos os campos obrigatórios.', 'error'); return; }
 
-  state.transactions.unshift({ id: Date.now(), type: 'expense', desc, value: val, date, cat, note, status });
+  // Warn if wallet balance insufficient
+  if (walletId) {
+    const bal = getWalletBalance(walletId);
+    const w = state.wallets.find(w => w.id === walletId);
+    if (val > bal) {
+      const wName = w ? w.name : 'essa carteira';
+      if (!confirm(`⚠️ Saldo insuficiente em "${wName}"!\n\nSaldo atual: ${fmt(bal)}\nValor da despesa: ${fmt(val)}\n\nDeseja lançar mesmo assim?`)) return;
+    }
+  }
+
+  state.transactions.unshift({ id: Date.now(), type: 'expense', desc, value: val, date, cat, note, status, walletId });
   saveState(); updateAll(); closeModal('modal-expense');
   document.getElementById('exp-desc').value = '';
   document.getElementById('exp-value').value = '';
@@ -2165,11 +2428,13 @@ function showPage(name) {
 function renderTxItem(t) {
   const isIn = t.type === 'income';
   const statusBadge = t.status === 'pending' ? '⏳ ' : t.status === 'recurring' ? '🔄 ' : '';
+  const wallet = t.walletId ? state.wallets.find(w => w.id === t.walletId) : null;
+  const walletTag = wallet ? ` · <span style="color:${wallet.color};font-size:10px;">${wallet.emoji} ${wallet.name}</span>` : '';
   return `<div class="tx-item">
     <div class="tx-icon ${isIn ? 'in' : 'out'}">${isIn ? '↑' : '↓'}</div>
     <div class="tx-info">
       <div class="tx-desc">${statusBadge}${t.desc}</div>
-      <div class="tx-meta">${formatDate(t.date)} · <span class="tx-cat">${catEmoji(t.cat)} ${t.cat}</span>${t.note ? ' · ' + t.note : ''}</div>
+      <div class="tx-meta">${formatDate(t.date)} · <span class="tx-cat">${catEmoji(t.cat)} ${t.cat}</span>${walletTag}${t.note ? ' · ' + t.note : ''}</div>
     </div>
     <div class="tx-amount ${isIn ? 'in' : 'out'}">${isIn ? '+' : '-'} ${fmt(t.value)}</div>
     <button class="tx-delete" onclick="deleteTransaction(${t.id})" title="Remover">✕</button>
@@ -2288,6 +2553,8 @@ function updateAll() {
   renderTransactions();
   updateGoals();
   updateReport(monthTx, incomes, expenses, totalIn, totalOut, balance, saveRate);
+  updateWalletCards();
+  populateWalletSelects();
 }
 
 // ================== BUDGET RENDERING ==================
