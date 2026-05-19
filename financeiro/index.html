@@ -6,120 +6,16 @@
 <title>Finança — Gestão Financeira Pessoal</title>
 
 <!-- PWA -->
-<link rel="manifest" id="pwa-manifest">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finança">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="Finança">
 <meta name="description" content="Gestão Financeira Pessoal — controle suas finanças com estilo.">
-<!-- PWA Icons (inline SVG convertido para data URI) -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%230d0f14'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle' font-family='serif' fill='%23c9a84c'%3E₢%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-// ===== PWA: Gera o manifest.json inline via Blob =====
-(function() {
-  var manifest = {
-    name: "Finança — Gestão Financeira Pessoal",
-    short_name: "Finança",
-    description: "Controle suas finanças pessoais com estilo.",
-    start_url: "./",
-    display: "standalone",
-    background_color: "#0d0f14",
-    theme_color: "#0d0f14",
-    orientation: "portrait-primary",
-    lang: "pt-BR",
-    icons: [
-      {
-        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%230d0f14'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle' font-family='serif' fill='%23c9a84c'%3E%E2%82%A2%3C/text%3E%3C/svg%3E",
-        sizes: "192x192",
-        type: "image/svg+xml",
-        purpose: "any maskable"
-      },
-      {
-        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230d0f14'/%3E%3Ctext x='256' y='350' font-size='300' text-anchor='middle' font-family='serif' fill='%23c9a84c'%3E%E2%82%A2%3C/text%3E%3C/svg%3E",
-        sizes: "512x512",
-        type: "image/svg+xml",
-        purpose: "any maskable"
-      }
-    ]
-  };
-  var blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-  var url = URL.createObjectURL(blob);
-  document.getElementById('pwa-manifest').setAttribute('href', url);
-})();
-
-// ===== PWA: Registra o Service Worker inline via Blob =====
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    var swCode = `
-const CACHE = 'financa-v1';
-const ASSETS = ['/'];
-
-self.addEventListener('install', function(e) {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', function(e) {
-  e.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
-    }).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', function(e) {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    fetch(e.request).catch(function() {
-      return caches.match(e.request);
-    })
-  );
-});
-`;
-    var swBlob = new Blob([swCode], {type: 'application/javascript'});
-    var swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl, {scope: './'})
-      .then(function(reg) { console.log('[PWA] Service Worker registrado:', reg.scope); })
-      .catch(function(err) { console.warn('[PWA] Falha ao registrar SW:', err); });
-  });
-}
-
-// ===== PWA: Botão de instalação =====
-var _pwaPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  _pwaPrompt = e;
-  var btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'flex';
-});
-
-window.addEventListener('appinstalled', function() {
-  var btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.style.display = 'none';
-  _pwaPrompt = null;
-  if (typeof notify === 'function') notify('App instalado com sucesso! 🎉');
-});
-
-function installPWA() {
-  if (_pwaPrompt) {
-    _pwaPrompt.prompt();
-    _pwaPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') {
-        var btn = document.getElementById('pwa-install-btn');
-        if (btn) btn.style.display = 'none';
-      }
-      _pwaPrompt = null;
-    });
-  } else {
-    alert('Para instalar:\n• No Chrome/Edge: clique no ícone ⊕ na barra de endereços\n• No Safari (iPhone): toque em Compartilhar → "Adicionar à Tela Inicial"');
-  }
-}
-</script>
 <style>
   :root {
     --bg: #0d0f14;
@@ -1581,7 +1477,7 @@ function installPWA() {
           <span class="user-email" id="header-user-email"></span>
           <button class="btn-logout" onclick="doLogout()">↩ Sair</button>
         </div>
-        <button id="pwa-install-btn" class="btn btn-outline" onclick="installPWA()" style="display:none;align-items:center;gap:6px;" title="Instalar aplicativo">⬇ Instalar App</button>
+        <button id="pwa-install-btn" class="btn btn-outline" onclick="installPWA()" style="display:none;align-items:center;gap:6px;" title="Instalar App">⬇ Instalar App</button>
         <button class="btn btn-outline" onclick="openModal('modal-income')">+ Receita</button>
         <button class="btn btn-primary" onclick="openModal('modal-expense')">+ Despesa</button>
       </div>
@@ -1736,7 +1632,6 @@ function installPWA() {
         <div class="page-subtitle">Histórico completo de entradas e saídas</div>
       </div>
       <div class="header-actions">
-        <button id="pwa-install-btn-2" class="btn btn-outline" onclick="installPWA()" style="display:none;align-items:center;gap:6px;" title="Instalar aplicativo">⬇ Instalar App</button>
         <button class="btn btn-outline" onclick="openModal('modal-income')">+ Receita</button>
         <button class="btn btn-primary" onclick="openModal('modal-expense')">+ Despesa</button>
       </div>
@@ -3067,6 +2962,45 @@ function setActiveBottomNav(id) {
     if (pageToNav[page]) setActiveBottomNav(pageToNav[page]);
   };
 })();
+// ===== PWA: Service Worker =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(reg) { console.log('[PWA] SW registrado:', reg.scope); })
+      .catch(function(err) { console.warn('[PWA] Falha SW:', err); });
+  });
+}
+
+// ===== PWA: Botão de instalação =====
+var _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _pwaPrompt = e;
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', function() {
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+  _pwaPrompt = null;
+  if (typeof notify === 'function') notify('App instalado com sucesso! 🎉');
+});
+function installPWA() {
+  if (_pwaPrompt) {
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(function(r) {
+      if (r.outcome === 'accepted') {
+        var btn = document.getElementById('pwa-install-btn');
+        if (btn) btn.style.display = 'none';
+      }
+      _pwaPrompt = null;
+    });
+  } else {
+    // Fallback: instruções manuais
+    alert('Para instalar o app:\n\n📱 iPhone/iPad (Safari):\nToque em Compartilhar → "Adicionar à Tela Inicial"\n\n🤖 Android (Chrome):\nMenu ⋮ → "Adicionar à tela inicial"\n\n💻 Chrome/Edge no PC:\nClique no ícone ⊕ na barra de endereços');
+  }
+}
+
 </script>
 </body>
 </html>
