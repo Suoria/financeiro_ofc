@@ -1274,11 +1274,42 @@
     display: inline-block;
   }
 
+  /* Emoji picker */
+  .emoji-cat-btn {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text3);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .emoji-cat-btn.active { background: var(--gold-dim); border-color: rgba(201,168,76,0.3); color: var(--gold2); }
+
+  .emoji-btn {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    padding: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1;
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .emoji-btn:hover { background: var(--card2); }
+  .emoji-btn.selected { background: var(--gold-dim); outline: 2px solid var(--gold); }
+
   @media (max-width: 768px) {
     .wallet-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .wallet-card { padding: 14px; }
     .wallet-balance { font-size: 18px; }
     .wallet-actions { opacity: 1; }
+    #emoji-grid { grid-template-columns: repeat(7, 1fr); }
   }
 </style>
 <body>
@@ -1744,28 +1775,48 @@
 
 <!-- Modal: Nova Carteira -->
 <div class="modal-overlay" id="modal-wallet">
-  <div class="modal">
+  <div class="modal" style="max-width:480px;">
     <div class="modal-title">Nova Carteira</div>
     <div class="form-full">
       <label class="field-label">Nome da carteira</label>
       <input class="field-input" id="wallet-name" type="text" placeholder="Ex: Vale Alimentação, Conta Corrente...">
     </div>
-    <div class="form-row">
-      <div>
-        <label class="field-label">Emoji / Ícone</label>
-        <input class="field-input" id="wallet-emoji" type="text" placeholder="🍽️" maxlength="2">
+
+    <!-- EMOJI PICKER -->
+    <div class="form-full">
+      <label class="field-label">Ícone</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div id="wallet-emoji-preview" style="
+          width:48px;height:48px;border-radius:12px;
+          background:var(--bg3);border:2px solid var(--gold);
+          display:flex;align-items:center;justify-content:center;
+          font-size:26px;flex-shrink:0;">💳</div>
+        <div style="font-size:12px;color:var(--text3);">Selecione um emoji abaixo ou clique nas categorias</div>
       </div>
-      <div>
-        <label class="field-label">Cor</label>
-        <select class="field-select" id="wallet-color">
-          <option value="#c9a84c">🟡 Dourado</option>
-          <option value="#3ecf8e">🟢 Verde</option>
-          <option value="#5b8dee">🔵 Azul</option>
-          <option value="#f16b6b">🔴 Vermelho</option>
-          <option value="#a78bfa">🟣 Roxo</option>
-          <option value="#f59e0b">🟠 Laranja</option>
-        </select>
-      </div>
+
+      <!-- Category tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;" id="emoji-cat-tabs"></div>
+
+      <!-- Emoji grid -->
+      <div id="emoji-grid" style="
+        display:grid;grid-template-columns:repeat(8,1fr);gap:4px;
+        max-height:180px;overflow-y:auto;
+        background:var(--bg3);border:1px solid var(--border2);
+        border-radius:var(--radius-sm);padding:8px;"></div>
+
+      <input type="hidden" id="wallet-emoji" value="💳">
+    </div>
+
+    <div class="form-full">
+      <label class="field-label">Cor</label>
+      <select class="field-select" id="wallet-color">
+        <option value="#c9a84c">🟡 Dourado</option>
+        <option value="#3ecf8e">🟢 Verde</option>
+        <option value="#5b8dee">🔵 Azul</option>
+        <option value="#f16b6b">🔴 Vermelho</option>
+        <option value="#a78bfa">🟣 Roxo</option>
+        <option value="#f59e0b">🟠 Laranja</option>
+      </select>
     </div>
     <div class="form-full">
       <label class="field-label">Saldo inicial (R$)</label>
@@ -2209,6 +2260,66 @@ function getWalletBalance(walletId) {
     .reduce((s, t) => s + t.value, 0);
   return (w.initial || 0) + income - expense;
 }
+
+// ================== EMOJI PICKER ==================
+const EMOJI_CATS = [
+  { label: '💰 Finanças',    emojis: ['💳','💵','💴','💶','💷','💸','🏦','🏧','💹','📈','📉','💼','🪙','💎','🤑','💰','🏪','🛒','🧾','🪪'] },
+  { label: '🍽️ Alimentação', emojis: ['🍽️','🛒','🥗','🥩','🍖','🍕','🍔','🌮','🍣','🍱','🥘','🍜','☕','🥤','🧃','🍺','🧁','🎂','🛍️','🏪'] },
+  { label: '🚗 Transporte',  emojis: ['🚗','⛽','🚕','🚌','🚎','🏍️','🚲','✈️','🚂','🚢','🛵','🛺','🚐','🚁','⚓','🛣️','🗺️','🅿️','🚦','🛞'] },
+  { label: '🏠 Moradia',     emojis: ['🏠','🏡','🏢','🏗️','🔑','🛋️','🛏️','🪑','🚿','🪴','💡','🔌','🧹','🪣','🧺','🏘️','🏰','🏛️','🪟','🚪'] },
+  { label: '❤️ Saúde',       emojis: ['❤️','🏥','💊','💉','🩺','🩹','🧬','🔬','🦷','👓','🩻','🧘','🏃','🫀','🧠','🌡️','🩼','🫁','🧪','🩻'] },
+  { label: '📚 Educação',    emojis: ['📚','🎓','📖','📝','✏️','🖊️','📐','📏','🏫','💻','🖥️','⌨️','🖱️','📓','📔','📒','📕','📗','📘','📙'] },
+  { label: '🎭 Lazer',       emojis: ['🎭','🎮','🎬','🎵','🎸','🎯','⚽','🏀','🎾','🏊','🎲','🎪','🎡','🎢','🎟️','🏆','🥇','🎰','🃏','🎻'] },
+  { label: '👕 Pessoal',     emojis: ['👕','👗','👟','👠','👜','🧣','🧤','💄','💅','🪮','✂️','🪥','🧴','🧼','💍','⌚','🕶️','🎒','🧳','👔'] },
+  { label: '📱 Digital',     emojis: ['📱','💻','🖥️','📡','📺','📷','🎙️','🎧','⌨️','🖨️','☎️','📟','🔋','💾','💿','📀','🕹️','🖱️','🔌','📲'] },
+  { label: '⭐ Outros',      emojis: ['⭐','🌟','✨','🔥','🌈','🎁','🎀','🎊','🎉','🪄','🔮','🌙','☀️','🌊','🍀','🌸','🦋','🦄','🐾','💫'] },
+];
+
+let currentEmojiCat = 0;
+
+function initEmojiPicker() {
+  const tabsEl = document.getElementById('emoji-cat-tabs');
+  if (!tabsEl) return;
+  currentEmojiCat = 0;
+  tabsEl.innerHTML = EMOJI_CATS.map((cat, i) =>
+    `<button class="emoji-cat-btn ${i === 0 ? 'active' : ''}" onclick="selectEmojiCat(${i})">${cat.label}</button>`
+  ).join('');
+  renderEmojiGrid(0);
+}
+
+function selectEmojiCat(i) {
+  currentEmojiCat = i;
+  document.querySelectorAll('.emoji-cat-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  renderEmojiGrid(i);
+}
+
+function renderEmojiGrid(catIdx) {
+  const grid = document.getElementById('emoji-grid');
+  if (!grid) return;
+  const current = document.getElementById('wallet-emoji').value;
+  grid.innerHTML = EMOJI_CATS[catIdx].emojis.map(e =>
+    `<button class="emoji-btn ${e === current ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function selectEmoji(emoji) {
+  document.getElementById('wallet-emoji').value = emoji;
+  document.getElementById('wallet-emoji-preview').textContent = emoji;
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('selected', b.textContent.trim() === emoji));
+}
+
+// Patch openModal to init picker when wallet modal opens
+(function() {
+  const _orig = openModal;
+  openModal = function(id) {
+    _orig(id);
+    if (id === 'modal-wallet') {
+      document.getElementById('wallet-emoji').value = '💳';
+      document.getElementById('wallet-emoji-preview').textContent = '💳';
+      initEmojiPicker();
+    }
+  };
+})();
 
 function addWallet() {
   const name = document.getElementById('wallet-name').value.trim();
