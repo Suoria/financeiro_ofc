@@ -1775,58 +1775,67 @@
 
 <!-- Modal: Nova Carteira -->
 <div class="modal-overlay" id="modal-wallet">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:420px;">
     <div class="modal-title">Nova Carteira</div>
+
     <div class="form-full">
       <label class="field-label">Nome da carteira</label>
       <input class="field-input" id="wallet-name" type="text" placeholder="Ex: Vale Alimentação, Conta Corrente...">
     </div>
 
-    <!-- EMOJI PICKER -->
+    <!-- EMOJI PICKER compacto -->
     <div class="form-full">
       <label class="field-label">Ícone</label>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+
+      <!-- Preview + categorias lado a lado -->
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+
+        <!-- Preview do emoji selecionado -->
         <div id="wallet-emoji-preview" style="
-          width:48px;height:48px;border-radius:12px;
+          width:44px;height:44px;border-radius:10px;flex-shrink:0;
           background:var(--bg3);border:2px solid var(--gold);
           display:flex;align-items:center;justify-content:center;
-          font-size:26px;flex-shrink:0;">💳</div>
-        <div style="font-size:12px;color:var(--text3);">Selecione um emoji abaixo ou clique nas categorias</div>
+          font-size:24px;">💳</div>
+
+        <!-- Grade de categorias: 2 linhas × 5 botões -->
+        <div id="emoji-cat-tabs" style="display:flex;flex-wrap:wrap;gap:5px;flex:1;"></div>
       </div>
 
-      <!-- Category tabs -->
-      <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;" id="emoji-cat-tabs"></div>
-
-      <!-- Emoji grid -->
-      <div id="emoji-grid" style="
-        display:grid;grid-template-columns:repeat(8,1fr);gap:4px;
-        max-height:180px;overflow-y:auto;
-        background:var(--bg3);border:1px solid var(--border2);
-        border-radius:var(--radius-sm);padding:8px;"></div>
+      <!-- Grid de emojis: oculto por padrão, aparece ao selecionar categoria -->
+      <div id="emoji-grid-wrapper" style="display:none;margin-top:8px;">
+        <div id="emoji-grid" style="
+          display:grid;grid-template-columns:repeat(10,1fr);gap:3px;
+          background:var(--bg3);border:1px solid var(--border2);
+          border-radius:var(--radius-sm);padding:8px;"></div>
+      </div>
 
       <input type="hidden" id="wallet-emoji" value="💳">
     </div>
 
-    <div class="form-full">
-      <label class="field-label">Cor</label>
-      <select class="field-select" id="wallet-color">
-        <option value="#c9a84c">🟡 Dourado</option>
-        <option value="#3ecf8e">🟢 Verde</option>
-        <option value="#5b8dee">🔵 Azul</option>
-        <option value="#f16b6b">🔴 Vermelho</option>
-        <option value="#a78bfa">🟣 Roxo</option>
-        <option value="#f59e0b">🟠 Laranja</option>
-      </select>
+    <div class="form-row">
+      <div>
+        <label class="field-label">Cor</label>
+        <select class="field-select" id="wallet-color">
+          <option value="#c9a84c">🟡 Dourado</option>
+          <option value="#3ecf8e">🟢 Verde</option>
+          <option value="#5b8dee">🔵 Azul</option>
+          <option value="#f16b6b">🔴 Vermelho</option>
+          <option value="#a78bfa">🟣 Roxo</option>
+          <option value="#f59e0b">🟠 Laranja</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Saldo inicial (R$)</label>
+        <input class="field-input" id="wallet-initial" type="number" placeholder="0,00" min="0">
+      </div>
     </div>
-    <div class="form-full">
-      <label class="field-label">Saldo inicial (R$)</label>
-      <input class="field-input" id="wallet-initial" type="number" placeholder="0,00" min="0">
-    </div>
+
     <div class="form-full">
       <label class="field-label">Restrição de uso (opcional)</label>
       <input class="field-input" id="wallet-restriction" type="text" placeholder="Ex: Somente supermercado e padaria">
-      <div style="font-size:11px;color:var(--text3);margin-top:5px;">Deixe em branco para carteira de uso livre.</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px;">Deixe em branco para uso livre.</div>
     </div>
+
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-wallet')">Cancelar</button>
       <button class="btn btn-primary" onclick="addWallet()">✓ Criar Carteira</button>
