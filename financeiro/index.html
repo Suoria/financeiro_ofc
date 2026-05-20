@@ -553,10 +553,11 @@
   .budget-item {
     padding: 16px 24px;
     border-bottom: 1px solid var(--border);
-    position: relative;
+    transition: background 0.15s;
   }
 
   .budget-item:last-child { border-bottom: none; }
+  .budget-item:hover { background: rgba(255,255,255,0.02); }
 
   .budget-header {
     display: flex;
@@ -566,7 +567,29 @@
   }
 
   .budget-cat { font-size: 13px; font-weight: 500; color: var(--text); }
-  .budget-vals { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text3); }
+
+  /* Right side: valores + botões num mesmo container, com fade cruzado */
+  .budget-header-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 180px;
+    justify-content: flex-end;
+  }
+
+  .budget-vals {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text3);
+    transition: opacity 0.18s, transform 0.18s;
+    transform: translateX(0);
+  }
+
+  .budget-item:hover .budget-vals {
+    opacity: 0;
+    transform: translateX(6px);
+    pointer-events: none;
+  }
 
   .budget-bar-bg {
     height: 6px;
@@ -592,30 +615,39 @@
     text-align: right;
   }
 
-  /* BUDGET ACTIONS — botões editar/excluir */
+  /* BUDGET ACTIONS — surgem no lugar dos valores ao hover */
   .budget-actions {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-6px);
     display: flex;
     gap: 6px;
     opacity: 0;
-    transition: opacity 0.2s;
-    position: absolute;
-    top: 14px;
-    right: 24px;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
   }
 
-  .budget-item:hover .budget-actions { opacity: 1; }
+  .budget-item:hover .budget-actions {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(-50%) translateX(0);
+  }
 
   .budget-action-btn {
     background: var(--bg3);
     border: 1px solid var(--border2);
     color: var(--text3);
-    border-radius: 7px;
-    width: 28px; height: 28px;
-    font-size: 13px;
+    border-radius: 8px;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; gap: 5px;
     transition: all 0.15s;
     font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
   }
 
   .budget-action-btn.edit:hover {
@@ -631,7 +663,14 @@
   }
 
   @media (max-width: 768px) {
-    .budget-actions { opacity: 1; }
+    .budget-vals { display: none; }
+    .budget-actions {
+      opacity: 1;
+      pointer-events: all;
+      position: static;
+      transform: none;
+    }
+    .budget-header-right { gap: 6px; }
   }
 
   /* METAS */
@@ -2883,24 +2922,26 @@ function catExpenses(expenses) {
   return map;
 }
 
-// ★ budgetBar agora aceita parâmetro showActions para renderizar os botões
+// budgetBar — valores à direita, botões surgem no hover substituindo os valores
 function budgetBar(cat, spent, limit, showActions = false) {
   const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
   const cls = pct >= 100 ? 'danger' : pct >= 80 ? 'warn' : 'ok';
   const hasLimit = limit > 0;
+  const catKey = cat.replace(/'/g, "\\'");
 
-  // Botões de editar/excluir — só aparecem se showActions=true e houver limite definido
   const actionBtns = showActions && hasLimit ? `
     <div class="budget-actions">
-      <button class="budget-action-btn edit" title="Editar orçamento" onclick="editBudget('${cat.replace(/'/g, "\\'")}')">✏️</button>
-      <button class="budget-action-btn del" title="Excluir orçamento" onclick="deleteBudget('${cat.replace(/'/g, "\\'")}')">🗑️</button>
+      <button class="budget-action-btn edit" onclick="editBudget('${catKey}')">✏️ Editar</button>
+      <button class="budget-action-btn del" onclick="deleteBudget('${catKey}')">🗑️ Excluir</button>
     </div>` : '';
 
   return `<div class="budget-item">
-    ${actionBtns}
     <div class="budget-header">
       <div class="budget-cat">${catEmoji(cat)} ${cat}</div>
-      <div class="budget-vals">${fmt(spent)} / ${hasLimit ? fmt(limit) : 'Sem limite'}</div>
+      <div class="budget-header-right">
+        <div class="budget-vals">${fmt(spent)} / ${hasLimit ? fmt(limit) : 'Sem limite'}</div>
+        ${actionBtns}
+      </div>
     </div>
     <div class="budget-bar-bg"><div class="budget-bar-fill ${cls}" style="width:${pct}%"></div></div>
     <div class="budget-pct">${pct.toFixed(0)}% utilizado${hasLimit ? ' · ' + fmt(Math.max(limit - spent, 0)) + ' disponível' : ''}</div>
